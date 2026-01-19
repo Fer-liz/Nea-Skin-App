@@ -32,6 +32,10 @@ export const RecipeList = () => {
     const { selectedIndex } = useKeyboardNavigation(
         filteredRecipes,
         handleKeyboardSelect,
+        (recipe) => {
+            setSelectedRecipeId(recipe.id)
+            setShowDetailModal(true)
+        },
         !showCreateModal && !showDetailModal
     )
 

@@ -6,6 +6,7 @@ import { Modal } from '../ui/Modal'
 import { Button } from '../ui/Button'
 import { SearchableCombobox } from '../ui/Combobox'
 import { esTextoValido, esNumeroPositivo, formatearMoneda } from '../../lib/utils'
+import { AddIngredientModal } from '../inventory/AddIngredientModal'
 
 export const CreateRecipeModal = ({ isOpen, onClose, onSuccess, recipeToEdit = null }) => {
     const { createRecipe, updateRecipe } = useRecipes()
@@ -36,6 +37,7 @@ export const CreateRecipeModal = ({ isOpen, onClose, onSuccess, recipeToEdit = n
 
     // Add ingredient modal state
     const [showIngredientModal, setShowIngredientModal] = useState(false)
+    const [showNewIngredientModal, setShowNewIngredientModal] = useState(false)
     const [selectedIngredient, setSelectedIngredient] = useState(null)
     const [metodo, setMetodo] = useState('porcentaje')
     const [cantidad, setCantidad] = useState('')
@@ -137,10 +139,11 @@ export const CreateRecipeModal = ({ isOpen, onClose, onSuccess, recipeToEdit = n
             return
         }
 
-        if (Math.abs(porcentajeTotal - 100) > 0.1) {
-            setError(`El porcentaje total debe ser 100% (actual: ${porcentajeTotal.toFixed(2)}%)`)
-            return
-        }
+        // Removed strict 100% check allow saving drafts
+        // if (Math.abs(porcentajeTotal - 100) > 0.1) {
+        //     setError(`El porcentaje total debe ser 100% (actual: ${porcentajeTotal.toFixed(2)}%)`)
+        //     return
+        // }
 
         let result
         if (recipeToEdit) {
@@ -397,13 +400,25 @@ export const CreateRecipeModal = ({ isOpen, onClose, onSuccess, recipeToEdit = n
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                             Ingrediente:
                         </label>
-                        <SearchableCombobox
-                            items={ingredients}
-                            value={selectedIngredient}
-                            onChange={setSelectedIngredient}
-                            placeholder="Buscar ingrediente..."
-                            displayValue={(item) => item?.nombre || ''}
-                        />
+                        <div className="flex gap-2">
+                            <div className="flex-1">
+                                <SearchableCombobox
+                                    items={ingredients}
+                                    value={selectedIngredient}
+                                    onChange={setSelectedIngredient}
+                                    placeholder="Buscar ingrediente..."
+                                    displayValue={(item) => item?.nombre || ''}
+                                />
+                            </div>
+                            <Button
+                                type="button"
+                                onClick={() => setShowNewIngredientModal(true)}
+                                className="px-3 bg-neumorphic-primary text-white rounded-lg"
+                                title="Crear nuevo ingrediente"
+                            >
+                                +
+                            </Button>
+                        </div>
                     </div>
 
                     {selectedIngredient && (
@@ -487,6 +502,16 @@ export const CreateRecipeModal = ({ isOpen, onClose, onSuccess, recipeToEdit = n
                     </div>
                 </div>
             </Modal>
+
+            {/* Quick Create Ingredient Modal */}
+            <AddIngredientModal
+                isOpen={showNewIngredientModal}
+                onClose={() => setShowNewIngredientModal(false)}
+                onSuccess={() => {
+                    setShowNewIngredientModal(false)
+                    // Optionally auto-select the new ingredient here if we can get the ID
+                }}
+            />
         </>
     )
 }
