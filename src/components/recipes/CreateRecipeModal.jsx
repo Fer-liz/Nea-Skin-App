@@ -7,6 +7,7 @@ import { Button } from '../ui/Button'
 import { SearchableCombobox } from '../ui/Combobox'
 import { esTextoValido, esNumeroPositivo, formatearMoneda } from '../../lib/utils'
 import { AddIngredientModal } from '../inventory/AddIngredientModal'
+import { AddOperationalCostModal } from '../costs/AddOperationalCostModal'
 
 export const CreateRecipeModal = ({ isOpen, onClose, onSuccess, recipeToEdit = null }) => {
     const { createRecipe, updateRecipe } = useRecipes()
@@ -38,6 +39,7 @@ export const CreateRecipeModal = ({ isOpen, onClose, onSuccess, recipeToEdit = n
     // Add ingredient modal state
     const [showIngredientModal, setShowIngredientModal] = useState(false)
     const [showNewIngredientModal, setShowNewIngredientModal] = useState(false)
+    const [showNewCostModal, setShowNewCostModal] = useState(false)
     const [selectedIngredient, setSelectedIngredient] = useState(null)
     const [metodo, setMetodo] = useState('porcentaje')
     const [cantidad, setCantidad] = useState('')
@@ -193,8 +195,8 @@ export const CreateRecipeModal = ({ isOpen, onClose, onSuccess, recipeToEdit = n
     return (
         <>
             <Modal isOpen={isOpen} onClose={handleClose} title={recipeToEdit ? "✏️ Editar Receta" : "🧪 Crear Nueva Receta"} wide={true}>
-                <form onSubmit={handleSubmit} className="flex flex-col h-full">
-                    <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                <form onSubmit={handleSubmit} className="flex flex-col h-full max-h-full overflow-hidden">
+                    <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-0">
                         {error && <div className="alert alert-error py-2 mb-2">{error}</div>}
 
                         {/* Compact Grid: Basic Info + Notes */}
@@ -294,26 +296,36 @@ export const CreateRecipeModal = ({ isOpen, onClose, onSuccess, recipeToEdit = n
                                 )}
                             </div>
 
-                            <Button type="button" onClick={handleAddIngredient} variant="primary">
+                            <Button type="button" onClick={handleAddIngredient} variant="primary" className="mt-2">
                                 ➕ Agregar Ingrediente
                             </Button>
                         </div>
 
                         {/* Operational Costs Section */}
-                        <div className="mt-2">
-                            <h4 className="font-semibold text-sm mb-1">Gastos Operativos:</h4>
+                        <div className="pt-2 border-t border-gray-100">
+                            <div className="flex justify-between items-center mb-1">
+                                <h4 className="font-semibold text-sm text-gray-700">Gastos Operativos:</h4>
+                                <Button
+                                    type="button"
+                                    onClick={() => setShowNewCostModal(true)}
+                                    className="px-2 py-0.5 text-xs bg-neumorphic-primary text-white rounded shadow-sm hover:shadow"
+                                    title="Crear nuevo gasto"
+                                >
+                                    + Crear Nuevo
+                                </Button>
+                            </div>
 
-                            <div className="space-y-1 mb-2">
+                            <div className="space-y-1 mb-2 max-h-[120px] overflow-y-auto pr-1">
                                 {gastosReceta.length > 0 && (
                                     gastosReceta.map((gasto, index) => (
-                                        <div key={index} className="p-2 bg-white rounded border border-gray-100 flex justify-between items-center text-sm">
-                                            <span>{gasto.nombre}</span>
+                                        <div key={index} className="p-2 bg-white rounded border border-gray-100 flex justify-between items-center text-sm shadow-sm">
+                                            <span className="truncate flex-1 mr-2">{gasto.nombre}</span>
                                             <div className="flex items-center gap-2">
-                                                <span className="font-mono text-xs">${gasto.costo.toFixed(2)}</span>
+                                                <span className="font-mono text-xs text-gray-600">${gasto.costo.toFixed(2)}</span>
                                                 <button
                                                     type="button"
                                                     onClick={() => handleRemoveGasto(index)}
-                                                    className="text-red-400 hover:text-red-600"
+                                                    className="text-red-400 hover:text-red-600 p-1"
                                                 >
                                                     ×
                                                 </button>
@@ -323,18 +335,20 @@ export const CreateRecipeModal = ({ isOpen, onClose, onSuccess, recipeToEdit = n
                                 )}
                             </div>
 
-                            <div className="flex gap-2 flex-wrap">
-                                {costs.map((cost) => (
-                                    <button
-                                        key={cost.id}
-                                        type="button"
-                                        onClick={() => handleAddGasto(cost)}
-                                        className="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm transition-colors"
-                                        disabled={gastosReceta.find((g) => g.gasto_id === cost.id)}
-                                    >
-                                        {cost.nombre} (${cost.precio})
-                                    </button>
-                                ))}
+                            <div className="max-h-[80px] overflow-y-auto pr-1">
+                                <div className="flex gap-2 flex-wrap">
+                                    {costs.map((cost) => (
+                                        <button
+                                            key={cost.id}
+                                            type="button"
+                                            onClick={() => handleAddGasto(cost)}
+                                            className="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-lg text-xs transition-colors border border-gray-200"
+                                            disabled={gastosReceta.find((g) => g.gasto_id === cost.id)}
+                                        >
+                                            {cost.nombre} (${cost.precio})
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
                         </div>
 
@@ -510,6 +524,18 @@ export const CreateRecipeModal = ({ isOpen, onClose, onSuccess, recipeToEdit = n
                 onSuccess={() => {
                     setShowNewIngredientModal(false)
                     // Optionally auto-select the new ingredient here if we can get the ID
+                }}
+            />
+
+            {/* Quick Create Operational Cost Modal */}
+            <AddOperationalCostModal
+                isOpen={showNewCostModal}
+                onClose={() => setShowNewCostModal(false)}
+                onSuccess={(newCost) => {
+                    if (newCost) {
+                        handleAddGasto(newCost)
+                    }
+                    setShowNewCostModal(false)
                 }}
             />
         </>
