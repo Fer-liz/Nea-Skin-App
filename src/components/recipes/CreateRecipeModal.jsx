@@ -202,8 +202,8 @@ export const CreateRecipeModal = ({ isOpen, onClose, onSuccess, recipeToEdit = n
                         {/* Compact Grid: Basic Info + Notes */}
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                             {/* Left Col: Inputs */}
-                            <div className="md:col-span-3 grid grid-cols-3 gap-3">
-                                <div className="col-span-3">
+                            <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-3">
+                                <div className="md:col-span-3">
                                     <label className="block text-xs font-medium text-gray-700 mb-1">Nombre:</label>
                                     <input
                                         type="text"

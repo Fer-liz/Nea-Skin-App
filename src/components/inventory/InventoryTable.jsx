@@ -110,7 +110,7 @@ export const InventoryTable = () => {
             </div>
 
             {/* Inventory Table */}
-            <div className="neumorphic-table">
+            <div className="neumorphic-table overflow-x-auto">
                 <table className="w-full">
                     <thead>
                         <tr>
