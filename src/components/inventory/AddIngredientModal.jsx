@@ -26,7 +26,7 @@ export const AddIngredientModal = ({ isOpen, onClose, onSuccess }) => {
             setNombre('')
             setCantidad('')
             setCosto('')
-            onSuccess()
+            onSuccess(result.data)
         } else {
             setError(result.error)
         }

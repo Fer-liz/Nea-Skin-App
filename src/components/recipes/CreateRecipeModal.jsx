@@ -521,9 +521,11 @@ export const CreateRecipeModal = ({ isOpen, onClose, onSuccess, recipeToEdit = n
             <AddIngredientModal
                 isOpen={showNewIngredientModal}
                 onClose={() => setShowNewIngredientModal(false)}
-                onSuccess={() => {
+                onSuccess={(newIngredient) => {
                     setShowNewIngredientModal(false)
-                    // Optionally auto-select the new ingredient here if we can get the ID
+                    if (newIngredient) {
+                        setSelectedIngredient(newIngredient)
+                    }
                 }}
             />
 
