@@ -27,7 +27,7 @@ export const RecipeDetailModal = ({ isOpen, onClose, recipeId }) => {
             {loading ? (
                 <Loading message="Cargando detalles..." />
             ) : recipe ? (
-                <div className="space-y-6">
+                <div className="space-y-6 h-full overflow-y-auto px-1">
                     {/* Recipe Info */}
                     <div className="bg-gray-50 p-4 rounded-lg">
                         <div className="grid grid-cols-2 gap-4">

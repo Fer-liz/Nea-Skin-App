@@ -230,6 +230,72 @@ export const RecipesProvider = ({ children }) => {
         }
     }
 
+    const duplicateRecipe = async (originalRecipeId) => {
+        try {
+            // 1. Get full details of original recipe
+            const original = await getRecipeDetail(originalRecipeId)
+            if (!original) throw new Error('No se pudo cargar la receta original')
+
+            // 2. Create new recipe header
+            const newName = `(Copia) ${original.nombre}`
+            const newRecipeData = {
+                nombre: newName,
+                gramaje: original.gramaje,
+                margen: original.margen,
+                costo_total: original.costo_total,
+                precio_venta: original.precio_venta,
+                notas: original.notas
+            }
+
+            const { data: newRecipe, error: createError } = await supabase
+                .from('recetas')
+                .insert([newRecipeData])
+                .select()
+                .single()
+
+            if (createError) throw createError
+
+            // 3. Copy Ingredients
+            if (original.ingredientes && original.ingredientes.length > 0) {
+                const ingredientsToInsert = original.ingredientes.map(ing => ({
+                    receta_id: newRecipe.id,
+                    ingrediente_id: ing.ingrediente_id,
+                    porcentaje: ing.porcentaje,
+                    gramos: ing.gramos,
+                    costo: ing.costo
+                }))
+
+                const { error: ingError } = await supabase
+                    .from('receta_ingredientes')
+                    .insert(ingredientsToInsert)
+
+                if (ingError) throw ingError
+            }
+
+            // 4. Copy Operational Costs
+            if (original.extras && original.extras.length > 0) {
+                const extrasToInsert = original.extras.map(extra => ({
+                    receta_id: newRecipe.id,
+                    gasto_id: extra.gasto_id,
+                    costo: extra.costo
+                }))
+
+                const { error: extraError } = await supabase
+                    .from('receta_gastos')
+                    .insert(extrasToInsert)
+
+                if (extraError) throw extraError
+            }
+
+            await fetchRecipes()
+            return { success: true, mensaje: '✅ Receta duplicada correctamente', newId: newRecipe.id }
+
+        } catch (err) {
+            console.error('Duplicate error:', err)
+            return { success: false, error: err.message }
+        }
+    }
+
     useEffect(() => {
         fetchRecipes()
     }, [])
@@ -241,7 +307,10 @@ export const RecipesProvider = ({ children }) => {
             error,
             createRecipe,
             updateRecipe,
+            createRecipe,
+            updateRecipe,
             deleteRecipe,
+            duplicateRecipe,
             getRecipeDetail,
             refresh: fetchRecipes
         }}>

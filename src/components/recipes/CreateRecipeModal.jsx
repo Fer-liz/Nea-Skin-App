@@ -29,12 +29,28 @@ export const CreateRecipeModal = ({ isOpen, onClose, onSuccess, recipeToEdit = n
             setGramaje(recipeToEdit.gramaje)
             setMargen(recipeToEdit.margen)
             setNotas(recipeToEdit.notas || '')
-            setIngredientesReceta(recipeToEdit.ingredientes || [])
+            setItemsWithCosts(recipeToEdit.ingredientes || [])
             setGastosReceta(recipeToEdit.extras || [])
         } else if (isOpen && !recipeToEdit) {
             resetForm()
         }
     }, [recipeToEdit, isOpen])
+
+    // Helper to attach unit costs to existing ingredients when editing
+    const setItemsWithCosts = (savedIngredients) => {
+        // We try to find the current unit cost from the 'ingredients' list
+        // If not found, we calculate it from the saved record (costo / gramos)
+        const processed = savedIngredients.map(ing => {
+            const masterIng = ingredients.find(i => i.id === ing.ingrediente_id)
+            // Default to percentage-based scaling (isFixed: false) for existing recipes
+            return {
+                ...ing,
+                isFixed: false,
+                costo_unitario: masterIng ? masterIng.costo_unitario : (ing.gramos > 0 ? ing.costo / ing.gramos : 0)
+            }
+        })
+        setIngredientesReceta(processed)
+    }
 
     // Add ingredient modal state
     const [showIngredientModal, setShowIngredientModal] = useState(false)
@@ -92,6 +108,8 @@ export const CreateRecipeModal = ({ isOpen, onClose, onSuccess, recipeToEdit = n
             {
                 ingrediente_id: selectedIngredient.id,
                 nombre: selectedIngredient.nombre,
+                part_is_fixed: metodo === 'gramos', // Store if fixed weight
+                costo_unitario: selectedIngredient.costo_unitario,
                 porcentaje,
                 gramos,
                 costo
@@ -125,6 +143,33 @@ export const CreateRecipeModal = ({ isOpen, onClose, onSuccess, recipeToEdit = n
 
     const handleRemoveGasto = (index) => {
         setGastosReceta(gastosReceta.filter((_, i) => i !== index))
+    }
+
+    // SCALING LOGIC
+    const handleGramajeChange = (e) => {
+        const newGramajeStr = e.target.value
+        setGramaje(newGramajeStr)
+
+        const newTotal = parseFloat(newGramajeStr)
+        if (!newTotal || newTotal <= 0) return
+
+        // Recalculate ingredients based on the new total
+        // RULE: All ingredients scale their weight to maintain the same percentage
+        const newIngredients = ingredientesReceta.map(ing => {
+            // We use the stored percentage to calculate new grams
+            // This ensures strictly proportional scaling for everything
+            const newGramos = (ing.porcentaje / 100) * newTotal
+            const newCosto = newGramos * (ing.costo_unitario || 0)
+
+            return {
+                ...ing,
+                gramos: newGramos,
+                costo: newCosto
+                // isFixed property is ignored/irrelevant now for scaling behavior
+            }
+        })
+
+        setIngredientesReceta(newIngredients)
     }
 
     const handleSubmit = async (e) => {
@@ -221,7 +266,7 @@ export const CreateRecipeModal = ({ isOpen, onClose, onSuccess, recipeToEdit = n
                                         className="neumorphic-input py-1 px-2 text-sm"
                                         placeholder="100"
                                         value={gramaje}
-                                        onChange={(e) => setGramaje(e.target.value)}
+                                        onChange={handleGramajeChange}
                                     />
                                 </div>
                                 <div>

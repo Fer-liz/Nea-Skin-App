@@ -11,7 +11,7 @@ import { RecipeDetailModal } from './RecipeDetailModal'
 import { useKeyboardNavigation } from '../../hooks/useKeyboardNavigation'
 
 export const RecipeList = () => {
-    const { recipes, loading, error, deleteRecipe, getRecipeDetail } = useRecipes()
+    const { recipes, loading, error, deleteRecipe, duplicateRecipe, getRecipeDetail } = useRecipes()
     const [searchTerm, setSearchTerm] = useState('')
     const [showCreateModal, setShowCreateModal] = useState(false)
     const [selectedRecipeId, setSelectedRecipeId] = useState(null)
@@ -63,6 +63,18 @@ export const RecipeList = () => {
         }
     }
 
+    const handleDuplicate = async (recipe) => {
+        if (!confirm(`¿Deseas crear una copia de '${recipe.nombre}'?`)) return
+
+        const result = await duplicateRecipe(recipe.id)
+        if (result.success) {
+            setAlert({ type: 'success', message: result.mensaje })
+            setTimeout(() => setAlert(null), 3000)
+        } else {
+            setAlert({ type: 'error', message: result.error })
+        }
+    }
+
     const getKebabMenuItems = (recipe) => [
         {
             label: 'Ver Detalles',
@@ -76,6 +88,11 @@ export const RecipeList = () => {
             label: 'Editar',
             icon: '✏️',
             onClick: () => handleEdit(recipe)
+        },
+        {
+            label: 'Duplicar',
+            icon: '📑',
+            onClick: () => handleDuplicate(recipe)
         },
         {
             label: 'Eliminar',
